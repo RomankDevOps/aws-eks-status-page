@@ -1,0 +1,59 @@
+name: Django Status Page CI/CD
+
+# Trigger the pipeline automatically whenever code is pushed to the main branch
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1                  # Adjust if your teammate used a different region
+  ECR_REPOSITORY: status-page-app        # The name of the repository in AWS ECR
+
+jobs:
+  build-test-and-push:
+    name: Build, Test, and Push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # The automated bug-finding step mentioned in the architecture
+      - name: Install Linters and Run Code Checks
+        run: |
+          pip install flake8
+          # Stop the build if there are syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # Use the unique GitHub commit hash as the image tag for version control
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build the image using the Dockerfile we just wrote
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          
+          # Push the image to the secure AWS ECR storage
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          # Also tag and push it as 'latest' for easy reference
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest

@@ -60,9 +60,9 @@ resource "aws_eks_node_group" "on_demand" {
   instance_types  = ["t3.medium"]
 
   scaling_config {
-    desired_size = 1
-    max_size     = 1
-    min_size     = 1
+    desired_size = 2
+    max_size     = 2
+    min_size     = 2
   }
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_node_policy,
@@ -81,9 +81,9 @@ resource "aws_eks_node_group" "spot" {
   instance_types  = ["t3.medium"]
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
+    desired_size = 0
+    max_size     = 1
+    min_size     = 0
   }
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_node_policy,

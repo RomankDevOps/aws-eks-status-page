@@ -1,0 +1,3 @@
+# Override the default Grafana configuration
+grafana:
+  adminPassword: "0xQsE45IHdCsg0"

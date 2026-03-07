@@ -19,6 +19,10 @@ resource "aws_eks_cluster" "main" {
   vpc_config {
     subnet_ids = [aws_subnet.public_1a.id, aws_subnet.public_1b.id]
   }
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
   depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
 }
 
@@ -86,4 +90,22 @@ resource "aws_eks_node_group" "spot" {
     aws_iam_role_policy_attachment.eks_cni_policy,
     aws_iam_role_policy_attachment.ec2_container_registry_read_only,
   ]
+}
+
+# Create the standard access entry for Avishag
+resource "aws_eks_access_entry" "avishag_admin" {
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.avishag_iam_arn
+  type          = "STANDARD"
+}
+
+# Attach the official EKS Cluster Admin policy to her entry
+resource "aws_eks_access_policy_association" "avishag_admin_policy" {
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.avishag_iam_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  
+  access_scope {
+    type = "cluster"
+  }
 }

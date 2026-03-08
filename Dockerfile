@@ -34,4 +34,4 @@ USER appuser
 EXPOSE 8000
 
 # Start Gunicorn to serve the Django application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "status_project.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "statuspage.wsgi:application"]

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "status-page.fullname" . }}
+  labels:
+    app: {{ include "status-page.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "status-page.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "status-page.name" . }}
+    spec:
+      containers:
+        - name: status-page
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 80

@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install system dependencies silently (fixes the debconf warnings)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && apt-get install -y --no-install-recommends gcc libpq-dev build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file first to leverage Docker layer caching

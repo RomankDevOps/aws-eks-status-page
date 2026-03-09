@@ -61,4 +61,5 @@ jobs:
 
       - name: Deploy to EKS
         run: |
+          kubectl apply -f ./k8s/
           kubectl set image deployment/status-page status-page=${{ steps.build-image.outputs.image }}

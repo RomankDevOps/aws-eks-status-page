@@ -2,9 +2,9 @@
 module "redis" {
   source             = "./modules/elasticache"
   project_name       = var.project_name
-  vpc_id             = aws_vpc.main.id
-  vpc_cidr           = aws_vpc.main.cidr_block
-  private_subnet_ids = [aws_subnet.private_1a.id, aws_subnet.private_1b.id]
+  vpc_id             = module.vpc.vpc_id
+  vpc_cidr           = module.vpc.vpc_cidr_block
+  private_subnet_ids = module.vpc.private_subnets
 }
 
 # Output the Redis URL for your Kubernetes teammate

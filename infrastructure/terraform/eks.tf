@@ -1,111 +1,58 @@
-# IAM Role for the EKS Control Plane
-resource "aws_iam_role" "eks_cluster" {
-  name = "${var.project_name}-cluster-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "eks.amazonaws.com" } }]
-  })
-}
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
-}
+  cluster_name    = "${var.project_name}-cluster"
+  cluster_version = "1.29"
 
-# The EKS Cluster
-resource "aws_eks_cluster" "main" {
-  name     = "${var.project_name}-cluster"
-  role_arn = aws_iam_role.eks_cluster.arn
-  vpc_config {
-    subnet_ids = [aws_subnet.public_1a.id, aws_subnet.public_1b.id]
+  vpc_id                         = module.vpc.vpc_id
+  subnet_ids                     = module.vpc.public_subnets
+  cluster_endpoint_public_access = true
+
+  enable_cluster_creator_admin_permissions = true
+  authentication_mode                      = "API_AND_CONFIG_MAP"
+
+  # Fix for IAM role name length limits (Max 38 chars for prefix)
+  iam_role_use_name_prefix = false
+  iam_role_name            = "yar-eks-cluster-role"
+
+  # Avishag's Access Entry
+  access_entries = {
+    avishag_admin = {
+      principal_arn = var.avishag_iam_arn
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
   }
-  access_config {
-    authentication_mode = "API_AND_CONFIG_MAP"
-    bootstrap_cluster_creator_admin_permissions = true
-  }
-  depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
-}
 
-# IAM Role for Worker Nodes
-resource "aws_iam_role" "eks_nodes" {
-  name = "${var.project_name}-node-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" } }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role       = aws_iam_role.eks_nodes.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_nodes.name
-}
-
-resource "aws_iam_role_policy_attachment" "ec2_container_registry_read_only" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_nodes.name
-}
-
-# 1. The On-Demand Node Group (The reliable backbone)
-resource "aws_eks_node_group" "on_demand" {
-  cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "${var.project_name}-on-demand-nodes"
-  node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [aws_subnet.public_1a.id, aws_subnet.public_1b.id]
-  capacity_type   = "ON_DEMAND"
-  instance_types  = ["t3.medium"]
-
-  scaling_config {
-    desired_size = 2
-    max_size     = 2
-    min_size     = 2
-  }
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_worker_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
-    aws_iam_role_policy_attachment.ec2_container_registry_read_only,
-  ]
-}
-
-# 2. The Spot Node Group (The cost-effective workers)
-resource "aws_eks_node_group" "spot" {
-  cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "${var.project_name}-spot-nodes"
-  node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [aws_subnet.public_1a.id, aws_subnet.public_1b.id]
-  capacity_type   = "SPOT"
-  instance_types  = ["t3.medium"]
-
-  scaling_config {
-    desired_size = 0
-    max_size     = 1
-    min_size     = 0
-  }
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_worker_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
-    aws_iam_role_policy_attachment.ec2_container_registry_read_only,
-  ]
-}
-
-# Create the standard access entry for Avishag
-resource "aws_eks_access_entry" "avishag_admin" {
-  cluster_name  = aws_eks_cluster.main.name
-  principal_arn = var.avishag_iam_arn
-  type          = "STANDARD"
-}
-
-# Attach the official EKS Cluster Admin policy to her entry
-resource "aws_eks_access_policy_association" "avishag_admin_policy" {
-  cluster_name  = aws_eks_cluster.main.name
-  principal_arn = var.avishag_iam_arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-  
-  access_scope {
-    type = "cluster"
+  eks_managed_node_groups = {
+    on_demand = {
+      name                     = "on-demand"
+      iam_role_use_name_prefix = false
+      iam_role_name            = "yar-eks-on-demand-role"
+      
+      instance_types           = ["t3.medium"]
+      min_size                 = 2
+      max_size                 = 2
+      desired_size             = 2
+      capacity_type            = "ON_DEMAND"
+    }
+    spot = {
+      name                     = "spot"
+      iam_role_use_name_prefix = false
+      iam_role_name            = "yar-eks-spot-role"
+      
+      instance_types           = ["t3.medium"]
+      min_size                 = 0
+      max_size                 = 1
+      desired_size             = 0
+      capacity_type            = "SPOT"
+    }
   }
 }

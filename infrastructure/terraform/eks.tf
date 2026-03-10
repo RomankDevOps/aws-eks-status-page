@@ -5,6 +5,9 @@ module "eks" {
   cluster_name    = "${var.project_name}-cluster"
   cluster_version = "1.29"
 
+  # The bypass switch: Tells Terraform to ignore the immortal log group
+  create_cloudwatch_log_group = false
+
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.public_subnets
   cluster_endpoint_public_access = true
@@ -36,7 +39,7 @@ module "eks" {
       name                     = "on-demand"
       iam_role_use_name_prefix = false
       iam_role_name            = "yar-eks-on-demand-role"
-      
+
       instance_types           = ["t3.medium"]
       min_size                 = 2
       max_size                 = 2
@@ -47,7 +50,7 @@ module "eks" {
       name                     = "spot"
       iam_role_use_name_prefix = false
       iam_role_name            = "yar-eks-spot-role"
-      
+
       instance_types           = ["t3.medium"]
       min_size                 = 0
       max_size                 = 1

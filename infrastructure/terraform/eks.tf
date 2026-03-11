@@ -2,10 +2,8 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name    = "${var.project_name}-cluster"
-  cluster_version = "1.29"
-
-  # The bypass switch: Tells Terraform to ignore the immortal log group
+  cluster_name                = "${var.project_name}-cluster"
+  cluster_version             = "1.29"
   create_cloudwatch_log_group = false
 
   vpc_id                         = module.vpc.vpc_id
@@ -15,11 +13,9 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
   authentication_mode                      = "API_AND_CONFIG_MAP"
 
-  # Fix for IAM role name length limits (Max 38 chars for prefix)
   iam_role_use_name_prefix = false
   iam_role_name            = "yar-eks-cluster-role"
 
-  # Avishag's Access Entry
   access_entries = {
     avishag_admin = {
       principal_arn = var.avishag_iam_arn
@@ -40,22 +36,26 @@ module "eks" {
       iam_role_use_name_prefix = false
       iam_role_name            = "yar-eks-on-demand-role"
 
-      instance_types           = ["t3.medium"]
-      min_size                 = 2
-      max_size                 = 2
-      desired_size             = 2
-      capacity_type            = "ON_DEMAND"
+      instance_types = ["t3.medium"]
+      min_size       = 2
+      max_size       = 2
+      desired_size   = 2
+      capacity_type  = "ON_DEMAND"
+
+      associate_public_ip_address = true
     }
     spot = {
       name                     = "spot"
       iam_role_use_name_prefix = false
       iam_role_name            = "yar-eks-spot-role"
 
-      instance_types           = ["t3.medium"]
-      min_size                 = 0
-      max_size                 = 1
-      desired_size             = 0
-      capacity_type            = "SPOT"
+      instance_types = ["t3.medium"]
+      min_size       = 0
+      max_size       = 1
+      desired_size   = 0
+      capacity_type  = "SPOT"
+
+      associate_public_ip_address = true
     }
   }
 }

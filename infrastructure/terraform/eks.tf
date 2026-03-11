@@ -32,28 +32,16 @@ module "eks" {
 
   eks_managed_node_groups = {
     on_demand = {
-      name                     = "on-demand"
-      iam_role_use_name_prefix = false
-      iam_role_name            = "yar-eks-on-demand-role"
+      name = "on-demand"
+
+      create_iam_role = false
+      iam_role_arn    = "arn:aws:iam::992382545251:role/EksLabRole"
 
       instance_types = ["t3.medium"]
       min_size       = 2
       max_size       = 2
       desired_size   = 2
       capacity_type  = "ON_DEMAND"
-
-      associate_public_ip_address = true
-    }
-    spot = {
-      name                     = "spot"
-      iam_role_use_name_prefix = false
-      iam_role_name            = "yar-eks-spot-role"
-
-      instance_types = ["t3.medium"]
-      min_size       = 0
-      max_size       = 1
-      desired_size   = 0
-      capacity_type  = "SPOT"
 
       associate_public_ip_address = true
     }

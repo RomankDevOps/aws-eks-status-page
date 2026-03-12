@@ -20,9 +20,10 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy the rest of the Django project code
 COPY app/ /app/
 
-# --- THE REAL FIX ---
-# Copy the example config to the real config using the CORRECT filename (underscore)
-RUN cp statuspage/statuspage/configuration_example.py statuspage/statuspage/configuration.py
+# --- THE FOOLPROOF FIX ---
+# Dynamically find the file and copy it to configuration.py in the same directory
+RUN CONFIG_FILE=$(find . -name "configuration_example.py" | head -n 1) \
+    && cp "$CONFIG_FILE" "$(dirname "$CONFIG_FILE")/configuration.py"
 
 # Create a non-root user and grant ownership
 RUN useradd -m appuser && chown -R appuser:appuser /app

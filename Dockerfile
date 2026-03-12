@@ -20,13 +20,11 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy the rest of the Django project code
 COPY app/ /app/
 
-# --- BULLETPROOF FIX: Create empty configuration.py files ---
-# We do this before switching to the non-root user so the chown command below applies to them.
-RUN mkdir -p statuspage/statuspage \
-    && touch statuspage/configuration.py \
-    && touch statuspage/statuspage/configuration.py
+# --- THE REAL FIX ---
+# Copy the example config to the real config using the CORRECT filename (underscore)
+RUN cp statuspage/statuspage/configuration_example.py statuspage/statuspage/configuration.py
 
-# Create a non-root user and grant ownership of the app folder
+# Create a non-root user and grant ownership
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 

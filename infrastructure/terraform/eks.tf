@@ -44,6 +44,12 @@ module "eks" {
       capacity_type  = "ON_DEMAND"
 
       associate_public_ip_address = true
+
+      tags = {
+        Environment = "dev"
+        Project     = "status-page"
+        Owner       = "student"
+      }
     }
   }
 }

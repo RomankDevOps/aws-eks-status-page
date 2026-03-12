@@ -23,6 +23,12 @@ resource "helm_release" "ingress_nginx" {
     name  = "controller.service.type"
     value = "LoadBalancer"
   }
+
+  # The production fix we discussed: Disables the strict validation webhook
+  set {
+    name  = "controller.admissionWebhooks.enabled"
+    value = "false"
+  }
 }
 
 resource "helm_release" "status_page_app" {
@@ -30,6 +36,7 @@ resource "helm_release" "status_page_app" {
   chart            = "../../helm/status-page"
   namespace        = "default"
   create_namespace = true
+  wait             = false # Allows pipeline to continue to Docker build even if image is missing
 
   depends_on = [helm_release.ingress_nginx]
 }

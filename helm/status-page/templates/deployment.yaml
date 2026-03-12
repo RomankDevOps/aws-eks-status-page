@@ -18,5 +18,8 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # --- FIX: Injecting our Environment Variables ---
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
           ports:
             - containerPort: 80

@@ -18,8 +18,18 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # --- FIX: Injecting our Environment Variables ---
+          # --- Environment Variables ---
           env:
             {{- toYaml .Values.env | nindent 12 }}
+          # --- Volume Mounts ---
+          volumeMounts:
+            - name: django-config-volume
+              mountPath: /app/statuspage/configuration.py
+              subPath: configuration.py
           ports:
             - containerPort: 80
+      # --- Volumes ---
+      volumes:
+        - name: django-config-volume
+          configMap:
+            name: django-config

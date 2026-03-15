@@ -22,6 +22,13 @@ data:
 
     # REDIS SETTINGS (ElastiCache)
     REDIS = {
+        'default': {
+            'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
+            'PORT': 6379,
+            'PASSWORD': '',
+            'DATABASE': 0,
+            'SSL': False,
+        },
         'tasks': {
             'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
             'PORT': 6379,

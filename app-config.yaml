@@ -8,14 +8,14 @@ data:
 
     # SECURITY SETTINGS
     ALLOWED_HOSTS = ['*']
-    SECRET_KEY = 'super-secret-key-12345'
+    SECRET_KEY = os.environ['SECRET_KEY']
     DEBUG = True
 
     # DATABASE SETTINGS (RDS)
     DATABASE = {
         'NAME': 'statuspage',
         'USER': 'statuspage',
-        'PASSWORD': 'abcdefgh123456', 
+        'PASSWORD': os.environ['DB_PASSWORD'], 
         'HOST': 'yifat-avishag-roman-status-page-db.cx248m4we6k7.us-east-1.rds.amazonaws.com',
         'PORT': '5432',
     }
@@ -25,11 +25,15 @@ data:
         'tasks': {
             'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
             'PORT': 6379,
-            'DB': 0,
+            'PASSWORD': '',
+            'DATABASE': 0,
+            'SSL': False,
         },
         'caching': {
             'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
             'PORT': 6379,
-            'DB': 1,
+            'PASSWORD': '',
+            'DATABASE': 1,
+            'SSL': False,
         }
     }

@@ -18,18 +18,19 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # --- Environment Variables ---
           env:
             {{- toYaml .Values.env | nindent 12 }}
-          # --- Volume Mounts ---
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db-password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: django-secret-key
           volumeMounts:
             - name: django-config-volume
               mountPath: /app/statuspage/configuration.py
               subPath: configuration.py
-          ports:
-            - containerPort: 80
-      # --- Volumes ---
-      volumes:
-        - name: django-config-volume
-          configMap:
-            name: django-config

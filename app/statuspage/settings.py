@@ -4,7 +4,6 @@ import sys
 import platform
 
 from django.core.exceptions import ImproperlyConfigured
-
 from statuspage.config import PARAMS
 
 VERSION = '2.0.17-dev'
@@ -17,7 +16,6 @@ if sys.version_info < (3, 10):
     raise RuntimeError(
         f"Status-Page requires Python 3.10 or later. (Currently installed: Python {platform.python_version()})"
     )
-
 
 config_path = os.getenv('STATUS_PAGE_CONFIGURATION', 'statuspage.configuration')
 try:
@@ -45,7 +43,7 @@ ADMINS = getattr(configuration, 'ADMINS', [])
 AUTH_PASSWORD_VALIDATORS = getattr(configuration, 'AUTH_PASSWORD_VALIDATORS', [])
 BASE_PATH = getattr(configuration, 'BASE_PATH', '')
 if BASE_PATH:
-    BASE_PATH = BASE_PATH.strip('/') + '/'  # Enforce trailing slash only
+    BASE_PATH = BASE_PATH.strip('/') + '/'
 CORS_ORIGIN_ALLOW_ALL = getattr(configuration, 'CORS_ORIGIN_ALLOW_ALL', False)
 CORS_ORIGIN_REGEX_WHITELIST = getattr(configuration, 'CORS_ORIGIN_REGEX_WHITELIST', [])
 CORS_ORIGIN_WHITELIST = getattr(configuration, 'CORS_ORIGIN_WHITELIST', [])
@@ -56,12 +54,10 @@ DATETIME_FORMAT = getattr(configuration, 'DATETIME_FORMAT', 'N j, Y g:i a')
 DEBUG = getattr(configuration, 'DEBUG', False)
 DEVELOPER = getattr(configuration, 'DEVELOPER', False)
 EMAIL = getattr(configuration, 'EMAIL', {})
-# EXEMPT_VIEW_PERMISSIONS = getattr(configuration, 'EXEMPT_VIEW_PERMISSIONS', [])
 EXEMPT_VIEW_PERMISSIONS = []
 FIELD_CHOICES = getattr(configuration, 'FIELD_CHOICES', {})
 INTERNAL_IPS = getattr(configuration, 'INTERNAL_IPS', ('127.0.0.1', '::1'))
 LOGGING = getattr(configuration, 'LOGGING', {})
-# LOGIN_REQUIRED = getattr(configuration, 'LOGIN_REQUIRED', False)
 LOGIN_REQUIRED = True
 LOGIN_TIMEOUT = getattr(configuration, 'LOGIN_TIMEOUT', None)
 MEDIA_ROOT = getattr(configuration, 'MEDIA_ROOT', os.path.join(BASE_DIR, 'media')).rstrip('/')
@@ -110,7 +106,6 @@ TASKS_REDIS_DATABASE = TASKS_REDIS.get('DATABASE', 0)
 TASKS_REDIS_SSL = TASKS_REDIS.get('SSL', False)
 TASKS_REDIS_SKIP_TLS_VERIFY = TASKS_REDIS.get('INSECURE_SKIP_TLS_VERIFY', False)
 
-# Caching
 if 'caching' not in REDIS:
     raise ImproperlyConfigured(
         "REDIS section in configuration.py is missing caching subsection."
@@ -144,7 +139,6 @@ if CACHING_REDIS_SKIP_TLS_VERIFY:
     CACHES['default']['OPTIONS']['CONNECTION_POOL_KWARGS']['ssl_cert_reqs'] = False
 
 if LOGIN_TIMEOUT is not None:
-    # Django default is 1209600 seconds (14 days)
     SESSION_COOKIE_AGE = LOGIN_TIMEOUT
 
 EMAIL_HOST = EMAIL.get('SERVER')
@@ -235,9 +229,6 @@ AUTHENTICATION_BACKENDS = [
 
 OTP_ADMIN_HIDE_SENSITIVE_DATA = True
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 USE_I18N = True
 USE_L10N = False
@@ -249,32 +240,24 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATIC_ROOT = BASE_DIR + '/static'
 STATIC_URL = f'/{BASE_PATH}static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'project-static', 'dist'),
     os.path.join(BASE_DIR, 'project-static', 'img'),
-    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),  # Prefix with /docs
+    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),
 )
 
-# Media
 MEDIA_URL = '/{}media/'.format(BASE_PATH)
 
-# Disable default limit of 1000 fields per request. Needed for bulk deletion of objects. (Added in Django 1.10.)
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 FILTERS_NULL_CHOICE_LABEL = 'None'
 FILTERS_NULL_CHOICE_VALUE = 'null'
 
-REST_FRAMEWORK_VERSION = '.'.join(VERSION.split('-')[0].split('.')[:2])  # Use major.minor as API version
+REST_FRAMEWORK_VERSION = '.'.join(VERSION.split('-')[0].split('.')[:2])
 REST_FRAMEWORK = {
     'ALLOWED_VERSIONS': [REST_FRAMEWORK_VERSION],
     'COERCE_DECIMAL_TO_STRING': False,
@@ -302,10 +285,8 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSION': REST_FRAMEWORK_VERSION,
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
     'SCHEMA_COERCE_METHOD_NAMES': {
-        # Default mappings
         'retrieve': 'read',
         'destroy': 'delete',
-        # Custom operations
         'bulk_destroy': 'bulk_delete',
     },
     'VIEW_NAME_FUNCTION': 'utilities.api.get_view_name',
@@ -377,8 +358,6 @@ RQ_QUEUES = {
 }
 
 for plugin_name in PLUGINS:
-
-    # Import plugin module
     try:
         plugin = importlib.import_module(plugin_name)
     except ModuleNotFoundError as e:
@@ -389,7 +368,6 @@ for plugin_name in PLUGINS:
             )
         raise e
 
-    # Determine plugin config and add to INSTALLED_APPS.
     try:
         plugin_config = plugin.config
         INSTALLED_APPS.append("{}.{}".format(plugin_config.__module__, plugin_config.__name__))
@@ -399,19 +377,14 @@ for plugin_name in PLUGINS:
             "and point to the PluginConfig subclass.".format(plugin_name)
         )
 
-    # Validate user-provided configuration settings and assign defaults
     if plugin_name not in PLUGINS_CONFIG:
         PLUGINS_CONFIG[plugin_name] = {}
     plugin_config.validate(PLUGINS_CONFIG[plugin_name], VERSION)
 
-    # Add middleware
     plugin_middleware = plugin_config.middleware
     if plugin_middleware and type(plugin_middleware) in (list, tuple):
         MIDDLEWARE.extend(plugin_middleware)
 
-    # Create RQ queues dedicated to the plugin
-    # we use the plugin name as a prefix for queue name's defined in the plugin config
-    # ex: mysuperplugin.mysuperqueue1
     if type(plugin_config.queues) is not list:
         raise ImproperlyConfigured(
             "Plugin {} queues must be a list.".format(plugin_name)
@@ -420,22 +393,24 @@ for plugin_name in PLUGINS:
         f"{plugin_name}.{queue}": RQ_PARAMS for queue in plugin_config.queues
     })
 
-REDIS = {
+DATABASES = {
     'default': {
-        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
-        'PORT': 6379,
-        'DB': 0,
-    },
-    'tasks': {
-        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
-        'PORT': 6379,
-        'DB': 0,
-    },
-    'caching': {
-        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
-        'PORT': 6379,
-        'DB': 1,
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'NAME': os.environ.get('DB_NAME', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'OPTIONS': {'sslmode': os.environ.get('DB_SSL_MODE', 'require')},
     }
+}
+
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+
+REDIS = {
+    'default': {'HOST': REDIS_HOST, 'PORT': 6379, 'DB': 0},
+    'tasks':   {'HOST': REDIS_HOST, 'PORT': 6379, 'DB': 0},
+    'caching': {'HOST': REDIS_HOST, 'PORT': 6379, 'DB': 1}
 }
 
 RQ_QUEUES = {
@@ -443,20 +418,3 @@ RQ_QUEUES = {
     'default': REDIS['tasks'],
     'low': REDIS['tasks'],
 }
-
-import os
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'statuspage',
-        'USER': 'statuspage',
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': 'yifat-avishag-roman-status-page-db.cx248m4we6k7.us-east-1.rds.amazonaws.com',
-        'PORT': '5432',
-    }
-}
-
-# The absolute final truth for AWS RDS
-DATABASES['default']['USER'] = 'status_admin'
-DATABASES['default']['NAME'] = 'postgres'
-DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}

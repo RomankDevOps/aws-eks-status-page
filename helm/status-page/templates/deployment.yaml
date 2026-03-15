@@ -18,6 +18,9 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "status-page.fullname" . }}-env
           env:
             {{- toYaml .Values.env | nindent 12 }}
             - name: DB_PASSWORD

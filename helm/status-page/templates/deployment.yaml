@@ -35,7 +35,8 @@ spec:
               mountPath: /app/statuspage/configuration.py
               subPath: configuration.py
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 8000
       volumes:
         - name: django-config-volume
           configMap:

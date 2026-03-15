@@ -443,3 +443,15 @@ RQ_QUEUES = {
     'default': REDIS['tasks'],
     'low': REDIS['tasks'],
 }
+
+import os
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'statuspage',
+        'USER': 'statuspage',
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': 'yifat-avishag-roman-status-page-db.cx248m4we6k7.us-east-1.rds.amazonaws.com',
+        'PORT': '5432',
+    }
+}

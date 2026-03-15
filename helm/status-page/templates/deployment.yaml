@@ -15,6 +15,11 @@ spec:
         app: {{ include "status-page.name" . }}
     spec:
       containers:
+        - name: redis-proxy
+          image: alpine/socat:latest
+          command: ["socat", "TCP-LISTEN:6379,fork,reuseaddr", "TCP:yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com:6379"]
+          ports:
+            - containerPort: 6379
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}

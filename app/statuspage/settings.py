@@ -419,3 +419,27 @@ for plugin_name in PLUGINS:
     RQ_QUEUES.update({
         f"{plugin_name}.{queue}": RQ_PARAMS for queue in plugin_config.queues
     })
+
+REDIS = {
+    'default': {
+        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
+        'PORT': 6379,
+        'DB': 0,
+    },
+    'tasks': {
+        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
+        'PORT': 6379,
+        'DB': 0,
+    },
+    'caching': {
+        'HOST': 'yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com',
+        'PORT': 6379,
+        'DB': 1,
+    }
+}
+
+RQ_QUEUES = {
+    'high': REDIS['tasks'],
+    'default': REDIS['tasks'],
+    'low': REDIS['tasks'],
+}

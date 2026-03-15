@@ -18,6 +18,7 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["tail", "-f", "/dev/null"]
           env:
             {{- toYaml .Values.env | nindent 12 }}
             - name: STATUS_PAGE_CONFIGURATION

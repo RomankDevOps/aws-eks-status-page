@@ -455,3 +455,8 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+# The absolute final truth for AWS RDS
+DATABASES['default']['USER'] = 'status_admin'
+DATABASES['default']['NAME'] = 'postgres'
+DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}

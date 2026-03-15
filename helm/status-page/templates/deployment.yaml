@@ -18,11 +18,12 @@ spec:
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["tail", "-f", "/dev/null"]
           env:
             {{- toYaml .Values.env | nindent 12 }}
             - name: STATUS_PAGE_CONFIGURATION
-              value: "app_config"
+              value: "configuration"
+            - name: REDIS_URL
+              value: "redis://yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com:6379/0"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -35,11 +36,5 @@ spec:
                   key: django-secret-key
           volumeMounts:
             - name: django-config-volume
-              mountPath: /app/statuspage/app_config.py
-              subPath: app_config.py
-          ports:
-            - containerPort: 80
-      volumes:
-        - name: django-config-volume
-          configMap:
-            name: django-config
+              mountPath: /app/statuspage/configuration.py
+              subPath: configuration.py

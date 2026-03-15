@@ -3,13 +3,14 @@ kind: ConfigMap
 metadata:
   name: django-config
 data:
-  configuration.py: |
+  app_config.py: |
     import os
 
     # SECURITY SETTINGS
     ALLOWED_HOSTS = ['*']
     SECRET_KEY = os.environ['SECRET_KEY']
     DEBUG = True
+    SITE_URL = 'http://statuspage.local'
 
     # DATABASE SETTINGS (RDS)
     DATABASE = {

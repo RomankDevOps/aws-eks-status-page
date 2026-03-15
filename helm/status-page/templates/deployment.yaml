@@ -15,19 +15,11 @@ spec:
         app: {{ include "status-page.name" . }}
     spec:
       containers:
-        - name: aws-redis-tunnel
-          image: alpine:latest
-          command: ["/bin/sh", "-c"]
-          args: 
-            - "apk add --no-cache socat && socat TCP-LISTEN:6379,fork,reuseaddr TCP:yifat-avishag-roman-status-page-redis.7fftml.0001.use1.cache.amazonaws.com:6379"
-            
         - name: status-page
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             {{- toYaml .Values.env | nindent 12 }}
-            - name: STATUS_PAGE_CONFIGURATION
-              value: "configuration"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -44,3 +36,7 @@ spec:
               subPath: configuration.py
           ports:
             - containerPort: 80
+      volumes:
+        - name: django-config-volume
+          configMap:
+            name: django-config

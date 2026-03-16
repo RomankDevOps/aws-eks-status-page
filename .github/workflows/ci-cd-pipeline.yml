@@ -9,6 +9,8 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: status-page-app
   EKS_CLUSTER_NAME: yifat-avishag-roman-status-page-cluster
+  # Automatically generate version tags like v1, v2, v3 based on the action run number
+  IMAGE_TAG: v${{ github.run_number }}
 
 jobs:
   build-and-deploy:
@@ -16,6 +18,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # Allows the pipeline to push commits back to the repo
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -37,7 +41,7 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
-      # 2. THEN LOGIN TO ECR (Which Terraform just created)
+      # 2. THEN LOGIN TO ECR (Which Terraform just created/verified)
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -47,18 +51,29 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: v${{ github.run_number }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # 4. FINALLY, DEPLOY TO EKS
+      # 4. UPDATE HELM VALUES AND COMMIT TO REPO
+      - name: Update Helm Chart values.yaml
+        run: |
+          sed -i "s/tag: .*/tag: \"${{ env.IMAGE_TAG }}\"/" helm/status-page/values.yaml
+
+      - name: Commit and Push Updated Helm Chart
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add helm/status-page/values.yaml
+          git commit -m "chore: update image tag to ${{ env.IMAGE_TAG }} [skip ci]" || echo "No changes to commit"
+          git push origin main
+
+      # 5. FINALLY, DEPLOY TO EKS VIA HELM
       - name: Update EKS Kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
       - name: Deploy to EKS
         run: |
-          kubectl set image deployment/status-page status-page=${{ steps.build-image.outputs.image }}
+          helm upgrade --install status-page ./helm/status-page --set image.tag=${{ env.IMAGE_TAG }}

@@ -95,7 +95,7 @@ TASKS_REDIS = REDIS['tasks']
 TASKS_REDIS_HOST = TASKS_REDIS.get('HOST', 'localhost')
 TASKS_REDIS_PORT = TASKS_REDIS.get('PORT', 6379)
 TASKS_REDIS_SENTINELS = TASKS_REDIS.get('SENTINELS', [])
-TASKS_REDIS_USING_SENTINEL = all([
+TASKS_REDIS_USING_SENTIL = all([
     isinstance(TASKS_REDIS_SENTINELS, (list, tuple)),
     len(TASKS_REDIS_SENTINELS) > 0
 ])
@@ -154,9 +154,6 @@ EMAIL_TIMEOUT = EMAIL.get('TIMEOUT', 10)
 SERVER_EMAIL = EMAIL.get('FROM_EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL.get('FROM_EMAIL')
 
-LOGIN_URL = f'/{BASE_PATH}dashboard/login/'
-LOGIN_REDIRECT_URL = f'/{BASE_PATH}dashboard/'
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -201,7 +198,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'statuspage.urls'
 
-TEMPLATES_DIR = f'{BASE_DIR}/templates'
+# --- NEW FIX: Set the correct Templates and Static paths ---
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -223,6 +221,19 @@ TEMPLATES = [
     },
 ]
 
+# --- NEW FIX: Remove the /dashboard/ 404 error ---
+LOGIN_URL = f'/{BASE_PATH}login/'
+LOGIN_REDIRECT_URL = f'/{BASE_PATH}'
+
+STATIC_ROOT = '/app/static'
+STATIC_URL = f'/{BASE_PATH}static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'project-static', 'dist'),
+    os.path.join(BASE_DIR, 'project-static', 'img'),
+    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),
+)
+# -------------------------------------------------------------
+
 AUTHENTICATION_BACKENDS = [
     'statuspage.authentication.ObjectPermissionBackend',
 ]
@@ -239,14 +250,6 @@ WSGI_APPLICATION = 'statuspage.wsgi.application'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-STATIC_ROOT = BASE_DIR + '/static'
-STATIC_URL = f'/{BASE_PATH}static/'
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'project-static', 'dist'),
-    os.path.join(BASE_DIR, 'project-static', 'img'),
-    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),
-)
 
 MEDIA_URL = '/{}media/'.format(BASE_PATH)
 

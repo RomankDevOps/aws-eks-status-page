@@ -28,8 +28,8 @@ COPY app/ /app/
 RUN CONFIG_FILE=$(find . -name "configuration_example.py" | head -n 1) \
     && cp "$CONFIG_FILE" "$(dirname "$CONFIG_FILE")/configuration.py"
 
-# Create static directory and gather CSS files
-RUN mkdir -p /app/static && python statuspage/manage.py collectstatic --no-input
+# --- FIXED: Use correct path for manage.py ---
+RUN mkdir -p /app/static && python manage.py collectstatic --no-input
 
 # Create a non-root user and grant ownership
 RUN useradd -m appuser && chown -R appuser:appuser /app
@@ -37,5 +37,5 @@ USER appuser
 
 EXPOSE 8000
 
-# Tell Gunicorn where to run from
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--chdir", "/app/statuspage", "statuspage.wsgi:application"]
+# --- FIXED: Tell Gunicorn to run from /app ---
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--chdir", "/app", "statuspage.wsgi:application"]

@@ -3,6 +3,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "status-page.fullname" . }}
+  annotations:
+    nginx.ingress.kubernetes.io/app-root: /dashboard/
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

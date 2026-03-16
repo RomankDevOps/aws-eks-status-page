@@ -13,7 +13,7 @@ ingress:
   enabled: true
   className: "nginx"
   hosts:
-    - host: status.example.com
+    - host: ""
       paths:
         - path: /
           pathType: Prefix

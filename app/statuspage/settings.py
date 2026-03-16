@@ -23,9 +23,7 @@ try:
 except ModuleNotFoundError as e:
     if getattr(e, 'name') == config_path:
         raise ImproperlyConfigured(
-            f"Specified configuration module ({config_path}) not found. Please define "
-            f"statuspage/statuspage/configuration.py per the documentation, or specify an alternate module "
-            f"in the STATUS_PAGE_CONFIGURATION environment variable."
+            f"Specified configuration module ({config_path}) not found."
         )
     raise
 
@@ -95,7 +93,7 @@ TASKS_REDIS = REDIS['tasks']
 TASKS_REDIS_HOST = TASKS_REDIS.get('HOST', 'localhost')
 TASKS_REDIS_PORT = TASKS_REDIS.get('PORT', 6379)
 TASKS_REDIS_SENTINELS = TASKS_REDIS.get('SENTINELS', [])
-TASKS_REDIS_USING_SENTINELS = all([
+TASKS_REDIS_USING_SENTINEL = all([
     isinstance(TASKS_REDIS_SENTINELS, (list, tuple)),
     len(TASKS_REDIS_SENTINELS) > 0
 ])
@@ -154,6 +152,9 @@ EMAIL_TIMEOUT = EMAIL.get('TIMEOUT', 10)
 SERVER_EMAIL = EMAIL.get('FROM_EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL.get('FROM_EMAIL')
 
+LOGIN_URL = f'/{BASE_PATH}login/'
+LOGIN_REDIRECT_URL = f'/{BASE_PATH}'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -198,7 +199,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'statuspage.urls'
 
-# --- NEW FIX: Set the correct Templates and Static paths ---
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 TEMPLATES = [
     {
@@ -221,19 +221,6 @@ TEMPLATES = [
     },
 ]
 
-# --- NEW FIX: Remove the /dashboard/ 404 error ---
-LOGIN_URL = f'/{BASE_PATH}login/'
-LOGIN_REDIRECT_URL = f'/{BASE_PATH}'
-
-STATIC_ROOT = '/app/static'
-STATIC_URL = f'/{BASE_PATH}static/'
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'project-static', 'dist'),
-    os.path.join(BASE_DIR, 'project-static', 'img'),
-    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),
-)
-# -------------------------------------------------------------
-
 AUTHENTICATION_BACKENDS = [
     'statuspage.authentication.ObjectPermissionBackend',
 ]
@@ -251,14 +238,19 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+STATIC_ROOT = '/app/static'
+STATIC_URL = f'/{BASE_PATH}static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'project-static', 'dist'),
+    os.path.join(BASE_DIR, 'project-static', 'img'),
+    ('docs', os.path.join(BASE_DIR, 'project-static', 'docs')),
+)
+
 MEDIA_URL = '/{}media/'.format(BASE_PATH)
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-FILTERS_NULL_CHOICE_LABEL = 'None'
-FILTERS_NULL_CHOICE_VALUE = 'null'
 
 REST_FRAMEWORK_VERSION = '.'.join(VERSION.split('-')[0].split('.')[:2])
 REST_FRAMEWORK = {
@@ -297,31 +289,8 @@ REST_FRAMEWORK = {
 
 SWAGGER_SETTINGS = {
     'DEFAULT_AUTO_SCHEMA_CLASS': 'utilities.custom_inspectors.StatusPageSwaggerAutoSchema',
-    'DEFAULT_FIELD_INSPECTORS': [
-        'utilities.custom_inspectors.NullableBooleanFieldInspector',
-        'utilities.custom_inspectors.ChoiceFieldInspector',
-        'utilities.custom_inspectors.SerializedPKRelatedFieldInspector',
-        'drf_yasg.inspectors.CamelCaseJSONFilter',
-        'drf_yasg.inspectors.ReferencingSerializerInspector',
-        'drf_yasg.inspectors.RelatedFieldInspector',
-        'drf_yasg.inspectors.ChoiceFieldInspector',
-        'drf_yasg.inspectors.FileFieldInspector',
-        'drf_yasg.inspectors.DictFieldInspector',
-        'drf_yasg.inspectors.JSONFieldInspector',
-        'drf_yasg.inspectors.SerializerMethodFieldInspector',
-        'drf_yasg.inspectors.SimpleFieldInspector',
-        'drf_yasg.inspectors.StringDefaultFieldInspector',
-    ],
-    'DEFAULT_FILTER_INSPECTORS': [
-        'drf_yasg.inspectors.CoreAPICompatInspector',
-    ],
     'DEFAULT_INFO': 'statuspage.urls.openapi_info',
     'DEFAULT_MODEL_DEPTH': 1,
-    'DEFAULT_PAGINATOR_INSPECTORS': [
-        'utilities.custom_inspectors.NullablePaginatorInspector',
-        'drf_yasg.inspectors.DjangoRestResponsePagination',
-        'drf_yasg.inspectors.CoreAPICompatInspector',
-    ],
     'SECURITY_DEFINITIONS': {
         'Token': {
             'type': 'apiKey',

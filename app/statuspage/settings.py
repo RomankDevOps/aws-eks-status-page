@@ -397,3 +397,4 @@ import os
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'

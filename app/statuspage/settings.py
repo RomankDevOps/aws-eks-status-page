@@ -398,3 +398,4 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
+TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'statuspage', 'templates')]

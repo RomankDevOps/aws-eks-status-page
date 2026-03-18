@@ -395,6 +395,5 @@ RQ_QUEUES = {
 # --- PRODUCTION UI & TEMPLATE OVERRIDES ---
 import os
 TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates')]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'

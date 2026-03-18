@@ -373,7 +373,7 @@ DATABASES = {
         'USER': os.environ.get('DB_USER', 'postgres'),
         'NAME': os.environ.get('DB_NAME', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'OPTIONS': {'sslmode': os.environ.get('DB_SSL_MODE', 'require')},
+        'OPTIONS': {'sslmode': os.environ.get('DB_SSL_MODE', 'disable')},
     }
 }
 

@@ -7,12 +7,13 @@ data:
     import os
     ALLOWED_HOSTS = ['*']
     SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-key')
-    DEBUG = True
+    # FIX: Changed DEBUG from True to False — never expose debug info in production!
+    DEBUG = False
     SITE_URL = 'http://statuspage.local'
     DATABASE = {
         'NAME': 'statuspage',
         'USER': 'statuspage',
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''), 
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': 'yifat-avishag-roman-status-page-db.cx248m4we6k7.us-east-1.rds.amazonaws.com',
         'PORT': '5432',
     }

@@ -1,3 +1,6 @@
 grafana:
   service:
     type: LoadBalancer
+  admin:
+    existingSecret: "grafana-admin-secret"
+    userKey: "admin-password"

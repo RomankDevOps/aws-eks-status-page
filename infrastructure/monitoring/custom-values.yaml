@@ -1,5 +1,0 @@
-# Override the default Grafana configuration
-grafana:
-  admin:
-    existingSecret: "grafana-admin-secret"
-    userKey: "admin-password"

@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: 992382545251.dkr.ecr.us-east-1.amazonaws.com/status-page-app
-  tag: "v73"
+  tag: "v76"
   pullPolicy: IfNotPresent
 
 service:

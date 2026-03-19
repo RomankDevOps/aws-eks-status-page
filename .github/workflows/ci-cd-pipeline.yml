@@ -9,7 +9,6 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: status-page-app
   EKS_CLUSTER_NAME: yifat-avishag-roman-status-page-cluster
-  # Automatically generate version tags like v1, v2, v3 based on the action run number
   IMAGE_TAG: v${{ github.run_number }}
 
 jobs:
@@ -21,7 +20,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} # Allows the pipeline to push commits back to the repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run Linting (flake8)
+        run: flake8 app/statuspage/ --max-line-length=120
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -30,7 +40,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 1. RUN TERRAFORM FIRST TO CREATE THE INFRASTRUCTURE
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -43,12 +52,10 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
-      # 2. THEN LOGIN TO ECR (Which Terraform just created/verified)
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 3. BUILD AND PUSH THE IMAGE
       - name: Build, Tag, and Push Docker Image
         id: build-image
         env:
@@ -59,7 +66,6 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.IMAGE_TAG }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      # 4. UPDATE HELM VALUES AND COMMIT TO REPO
       - name: Update Helm Chart values.yaml
         run: |
           sed -i "s/tag: .*/tag: \"${{ env.IMAGE_TAG }}\"/" helm/status-page/values.yaml
@@ -72,7 +78,6 @@ jobs:
           git commit -m "chore: update image tag to ${{ env.IMAGE_TAG }} [skip ci]" || echo "No changes to commit"
           git push origin main
 
-      # 5. FINALLY, DEPLOY TO EKS VIA HELM
       - name: Update EKS Kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 

@@ -31,16 +31,37 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    on_demand = {
-      name = "on-demand"
+    spot_nodes = {
+      name = "spot-nodes"
+
+      create_iam_role = false
+      iam_role_arn    = "arn:aws:iam::992382545251:role/EksLabRole"
+
+      instance_types = ["t3.medium", "t3.large", "t3a.medium"]
+      min_size       = 2
+      max_size       = 3
+      desired_size   = 2
+      capacity_type  = "SPOT"
+
+      associate_public_ip_address = true
+
+      tags = {
+        Environment = "dev"
+        Project     = "status-page"
+        Owner       = "student"
+      }
+    }
+    
+    on_demand_fallback = {
+      name = "on-demand-fallback"
 
       create_iam_role = false
       iam_role_arn    = "arn:aws:iam::992382545251:role/EksLabRole"
 
       instance_types = ["t3.medium"]
-      min_size       = 2
-      max_size       = 2
-      desired_size   = 2
+      min_size       = 1
+      max_size       = 1
+      desired_size   = 1
       capacity_type  = "ON_DEMAND"
 
       associate_public_ip_address = true
